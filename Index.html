@@ -1,0 +1,379 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inbox Invaders: Cyber-Clean Protocol</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Retro Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700;800&family=Press+Start+2P&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Chakra Petch', sans-serif;
+      background-color: #070913;
+      color: #e2e8f0;
+      user-select: none;
+      overflow-x: hidden;
+    }
+    .font-arcade {
+      font-family: 'Press Start 2P', cursive;
+    }
+    .font-mono-tech {
+      font-family: 'Share Tech Mono', monospace;
+    }
+    /* CRT Scanline & Glow Overlay */
+    .crt-screen::before {
+      content: " ";
+      display: block;
+      position: absolute;
+      top: 0; left: 0; bottom: 0; right: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      z-index: 20;
+      background-size: 100% 3px, 6px 100%;
+      pointer-events: none;
+    }
+    .glow-cyan {
+      box-shadow: 0 0 15px rgba(6, 182, 212, 0.5), inset 0 0 10px rgba(6, 182, 212, 0.2);
+    }
+    .glow-magenta {
+      box-shadow: 0 0 18px rgba(236, 72, 153, 0.6);
+    }
+    .text-glow {
+      text-shadow: 0 0 8px rgba(56, 189, 248, 0.7);
+    }
+    .text-glow-danger {
+      text-shadow: 0 0 10px rgba(239, 68, 68, 0.9);
+    }
+    /* Custom scrollbar for terminal */
+    ::-webkit-scrollbar {
+      width: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #38bdf8;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-pink-500 selection:text-white">
+
+  <!-- TOP HEADER / METRIC COCKPIT -->
+  <header class="border-b border-cyan-500/30 bg-slate-950/80 backdrop-blur-md px-4 py-2 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- Brand & Title -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-gradient-to-tr from-cyan-600 to-fuchsia-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+          <i data-lucide="crosshair" class="w-6 h-6 text-white animate-spin-slow"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-arcade text-xs text-fuchsia-400">INBOX INVADERS</span>
+            <span class="px-1.5 py-0.5 text-[10px] font-mono-tech uppercase bg-cyan-950 border border-cyan-400 text-cyan-300 rounded">v2.4 Cyber-Sync</span>
+          </div>
+          <p class="text-[11px] text-slate-400 hidden sm:block">Turn digital chores into arcade dopamine · Zero your 5,000 unread emails</p>
+        </div>
+      </div>
+
+      <!-- Real Chore Progress HUD -->
+      <div class="flex items-center gap-2 sm:gap-6">
+        <!-- Unread Counter -->
+        <div class="bg-slate-900/90 border border-slate-700 px-3 py-1.5 rounded-lg flex items-center gap-2.5">
+          <div class="w-2 h-2 rounded-full bg-red-500 animate-ping"></div>
+          <div>
+            <div class="text-[10px] text-slate-400 font-mono-tech uppercase">Unread Backlog</div>
+            <div id="hud-unread" class="text-base sm:text-lg font-bold font-mono-tech text-amber-400 tracking-wider">5,000</div>
+          </div>
+        </div>
+
+        <!-- Cleared Data -->
+        <div class="bg-slate-900/90 border border-slate-700 px-3 py-1.5 rounded-lg flex items-center gap-2">
+          <i data-lucide="hard-drive-download" class="w-4 h-4 text-cyan-400"></i>
+          <div>
+            <div class="text-[10px] text-slate-400 font-mono-tech uppercase">Storage Freed</div>
+            <div id="hud-storage" class="text-base sm:text-lg font-bold font-mono-tech text-cyan-300">0.0 MB</div>
+          </div>
+        </div>
+
+        <!-- Time Saved -->
+        <div class="bg-slate-900/90 border border-slate-700 px-3 py-1.5 rounded-lg hidden md:flex items-center gap-2">
+          <i data-lucide="clock" class="w-4 h-4 text-emerald-400"></i>
+          <div>
+            <div class="text-[10px] text-slate-400 font-mono-tech uppercase">Time Reclaimed</div>
+            <div id="hud-time" class="text-base sm:text-lg font-bold font-mono-tech text-emerald-400">0m 00s</div>
+          </div>
+        </div>
+
+        <!-- Quick Toggles -->
+        <div class="flex items-center gap-1.5">
+          <button id="btn-audio" title="Toggle SFX Synth" class="p-2 rounded bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-600 transition">
+            <i data-lucide="volume-2" id="icon-audio" class="w-4 h-4"></i>
+          </button>
+          <button id="btn-settings" title="Integration Settings" class="p-2 rounded bg-slate-800 hover:bg-slate-700 text-fuchsia-400 border border-slate-600 transition">
+            <i data-lucide="settings" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- MAIN ARCADE ARENA & SIDEBAR -->
+  <main class="max-w-7xl mx-auto w-full p-2 sm:p-4 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4">
+
+    <!-- GAME CANVAS COLUMN (8 COLS) -->
+    <div class="lg:col-span-8 flex flex-col gap-2 relative">
+      
+      <!-- Top Arcade Status Strip -->
+      <div class="flex items-center justify-between bg-slate-900/80 px-4 py-2 rounded-t-xl border-t border-x border-cyan-500/40 text-xs font-mono-tech">
+        <div class="flex items-center gap-4">
+          <span class="flex items-center gap-1 text-pink-400">
+            <i data-lucide="heart" class="w-4 h-4 fill-pink-500 text-pink-500"></i>
+            SHIELDS: <b id="hud-shields" class="text-white text-sm">3</b>
+          </span>
+          <span class="text-yellow-400">SCORE: <b id="hud-score" class="text-white text-sm">000000</b></span>
+          <span class="text-purple-400 hidden sm:inline">MULTIPLIER: <b id="hud-multiplier" class="text-white text-sm">1.0x</b></span>
+        </div>
+        <div class="flex items-center gap-3">
+          <span id="emp-badge" class="px-2 py-0.5 rounded bg-fuchsia-950/80 border border-fuchsia-500 text-fuchsia-300 font-bold text-[10px] animate-pulse">
+            EMP READY (E)
+          </span>
+          <button id="btn-pause" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 text-xs">
+            PAUSE
+          </button>
+        </div>
+      </div>
+
+      <!-- Canvas Container -->
+      <div class="relative w-full aspect-[4/3] max-h-[580px] bg-slate-950 rounded-b-xl border-b border-x border-cyan-500/40 overflow-hidden shadow-2xl crt-screen flex items-center justify-center">
+        <canvas id="game-canvas" class="w-full h-full block cursor-crosshair"></canvas>
+
+        <!-- Overlay: Welcome / Start Screen -->
+        <div id="start-overlay" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-30">
+          <div class="p-3 bg-fuchsia-500/10 border border-fuchsia-500/40 rounded-full mb-3">
+            <i data-lucide="inbox" class="w-12 h-12 text-cyan-400 animate-bounce"></i>
+          </div>
+          <h1 class="text-2xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-pink-400 to-yellow-300 font-arcade mb-2">
+            INBOX INVADERS
+          </h1>
+          <p class="text-sm sm:text-base text-slate-300 max-w-lg mb-6 font-mono-tech">
+            A real-time chore destroyer. Zap corporate spam, archive notifications, and tractor-beam vital messages to purge the backlog!
+          </p>
+
+          <!-- Control Legend Badges -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-left mb-6 w-full max-w-xl text-xs font-mono-tech">
+            <div class="bg-slate-900 border border-red-500/40 p-2 rounded">
+              <span class="text-red-400 font-bold">SPACE / Click:</span>
+              <p class="text-slate-400 text-[11px]">Trash / Vaporize Spambots & Pitches</p>
+            </div>
+            <div class="bg-slate-900 border border-cyan-500/40 p-2 rounded">
+              <span class="text-cyan-400 font-bold">KEY [A]:</span>
+              <p class="text-slate-400 text-[11px]">Archive Newsletters & Receipts safely</p>
+            </div>
+            <div class="bg-slate-900 border border-yellow-500/40 p-2 rounded">
+              <span class="text-yellow-400 font-bold">KEY [S]:</span>
+              <p class="text-slate-400 text-[11px]">Star VIPs / Bosses (DO NOT SHOOT!)</p>
+            </div>
+            <div class="bg-slate-900 border border-fuchsia-500/40 p-2 rounded">
+              <span class="text-fuchsia-400 font-bold">KEY [E]:</span>
+              <p class="text-slate-400 text-[11px]">Unsubscribe EMP Screen-Clear Bomb</p>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap gap-4 justify-center">
+            <button id="btn-play" class="px-8 py-3 rounded-lg font-bold font-arcade text-xs sm:text-sm bg-gradient-to-r from-cyan-500 to-fuchsia-500 hover:from-cyan-400 hover:to-fuchsia-400 text-slate-950 shadow-lg shadow-cyan-500/40 transform hover:scale-105 active:scale-95 transition">
+              BOOT OPERATION [SPACE]
+            </button>
+            <button id="btn-quick-config" class="px-4 py-3 rounded-lg font-bold font-mono-tech text-xs bg-slate-800 hover:bg-slate-700 border border-slate-600 text-cyan-300">
+              API CONFIG / DEMO MODE
+            </button>
+          </div>
+        </div>
+
+        <!-- Overlay: Game Over / Victory Modal -->
+        <div id="gameover-overlay" class="hidden absolute inset-0 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-30">
+          <div id="gameover-icon" class="p-3 rounded-full mb-3 bg-red-500/20 text-red-400 border border-red-500">
+            <i data-lucide="skull" class="w-12 h-12"></i>
+          </div>
+          <h2 id="gameover-title" class="text-2xl sm:text-3xl font-arcade text-red-500 mb-2">SYSTEM COMPROMISED</h2>
+          <p id="gameover-desc" class="text-slate-300 text-sm max-w-md font-mono-tech mb-4">You accidentally vaporized an urgent email from your CEO or let critical alerts breach the firewall!</p>
+
+          <div class="bg-slate-900/90 border border-slate-700 p-4 rounded-xl w-full max-w-sm mb-5 text-left font-mono-tech text-xs space-y-2">
+            <div class="flex justify-between"><span class="text-slate-400">Emails Purged:</span> <span id="summary-purged" class="text-cyan-400 font-bold">0</span></div>
+            <div class="flex justify-between"><span class="text-slate-400">Total Megabytes Saved:</span> <span id="summary-mb" class="text-fuchsia-400 font-bold">0.0 MB</span></div>
+            <div class="flex justify-between"><span class="text-slate-400">Max Streak:</span> <span id="summary-streak" class="text-yellow-400 font-bold">0</span></div>
+            <div class="flex justify-between"><span class="text-slate-400">Final Arcade Score:</span> <span id="summary-score" class="text-emerald-400 font-bold">0</span></div>
+          </div>
+
+          <button id="btn-restart" class="px-6 py-3 rounded-lg font-arcade text-xs bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold shadow-lg shadow-cyan-400/30">
+            RE-ENGAGE DEFENSES [SPACE]
+          </button>
+        </div>
+
+      </div>
+
+      <!-- On-Screen Touch / Quick Action Controls for Mobile -->
+      <div class="grid grid-cols-4 gap-2 sm:hidden pt-2">
+        <button id="mobile-zap" class="py-3 bg-rose-600 active:bg-rose-500 rounded font-bold text-xs flex flex-col items-center justify-center">
+          <i data-lucide="flame" class="w-4 h-4 mb-0.5"></i> ZAP (TRASH)
+        </button>
+        <button id="mobile-archive" class="py-3 bg-cyan-600 active:bg-cyan-500 rounded font-bold text-xs flex flex-col items-center justify-center">
+          <i data-lucide="archive" class="w-4 h-4 mb-0.5"></i> ARCHIVE
+        </button>
+        <button id="mobile-star" class="py-3 bg-amber-600 active:bg-amber-500 rounded font-bold text-xs flex flex-col items-center justify-center">
+          <i data-lucide="star" class="w-4 h-4 mb-0.5"></i> STAR VIP
+        </button>
+        <button id="mobile-emp" class="py-3 bg-fuchsia-700 active:bg-fuchsia-600 rounded font-bold text-xs flex flex-col items-center justify-center">
+          <i data-lucide="zap" class="w-4 h-4 mb-0.5"></i> EMP BOMB
+        </button>
+      </div>
+
+      <!-- Keyboard Tips Bar -->
+      <div class="flex items-center justify-between text-[11px] font-mono-tech text-slate-400 px-2 py-1 bg-slate-900/40 rounded border border-slate-800">
+        <span>Controls: <b class="text-slate-200">← → / Mouse</b> Move | <b class="text-slate-200">Space</b> Laser Zap | <b class="text-slate-200">A</b> Archive | <b class="text-slate-200">S</b> Star | <b class="text-slate-200">E</b> EMP Blast</span>
+        <span class="text-fuchsia-400 hidden sm:inline">Pro-tip: Don't zap VIP Work emails! Star them to keep streaks.</span>
+      </div>
+
+    </div>
+
+    <!-- SIDEBAR: LIVE API CONSOLE, STATS & INTEL (4 COLS) -->
+    <div class="lg:col-span-4 flex flex-col gap-4">
+
+      <!-- Active Mode Selector Card -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-4 shadow-lg">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <i data-lucide="activity" class="w-4 h-4 text-cyan-400"></i>
+            <span class="text-xs font-arcade text-slate-200">EXECUTION MODE</span>
+          </div>
+          <span id="active-mode-badge" class="px-2 py-0.5 rounded text-[10px] font-mono-tech uppercase bg-emerald-950 border border-emerald-500 text-emerald-300 font-bold">
+            Simulated Sandbox
+          </span>
+        </div>
+
+        <div class="text-xs text-slate-400 mb-3 font-mono-tech">
+          Every blaster shot translates to verified backend API batch calls (Google Workspace <code class="text-cyan-300">batchDelete</code> / <code class="text-cyan-300">batchModify</code>).
+        </div>
+
+        <!-- Mode Toggle Pill -->
+        <div class="grid grid-cols-2 p-1 bg-slate-950 rounded-lg border border-slate-800 text-xs font-mono-tech">
+          <button id="mode-sim-btn" class="py-1.5 rounded-md font-semibold text-center bg-cyan-600 text-white transition">
+            Simulation
+          </button>
+          <button id="mode-live-btn" class="py-1.5 rounded-md font-semibold text-center text-slate-400 hover:text-white transition">
+            Live OAuth API
+          </button>
+        </div>
+
+        <!-- Live Auth Input Panel (collapsible) -->
+        <div id="live-config-panel" class="hidden mt-3 pt-3 border-t border-slate-800 text-xs space-y-2 font-mono-tech">
+          <label class="block text-slate-300">Gmail OAuth Bearer Token:</label>
+          <input type="password" id="input-token" placeholder="ya29.a0AfH6SM..." class="w-full bg-slate-950 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-cyan-300 focus:outline-none focus:border-cyan-400">
+          <div class="flex items-center justify-between text-[10px] text-slate-400">
+            <span>Scopes: <code class="text-slate-300">gmail.modify</code></span>
+            <button id="btn-save-token" class="px-2 py-0.5 rounded bg-cyan-700 hover:bg-cyan-600 text-white">Save</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Terminal / Batch API Queue Log -->
+      <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 flex-1 flex flex-col shadow-inner min-h-[220px]">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-800 text-xs font-mono-tech">
+          <span class="flex items-center gap-1.5 text-slate-300">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            BACKGROUND API QUEUE
+          </span>
+          <button id="btn-clear-term" class="text-[10px] text-slate-500 hover:text-slate-300">clear</button>
+        </div>
+
+        <!-- Terminal Output Window -->
+        <div id="terminal-logs" class="flex-1 overflow-y-auto font-mono-tech text-[11px] p-2 space-y-1.5 max-h-[260px] select-text">
+          <div class="text-slate-500">// System initialized. 5,000 backlogged entities indexed.</div>
+          <div class="text-cyan-400">> Listening on laser triggers...</div>
+        </div>
+
+        <div class="pt-2 border-t border-slate-800 text-[10px] font-mono-tech flex justify-between text-slate-500">
+          <span>Batch Buffer: <b id="term-buffer-count" class="text-slate-300">0</b>/10 queued</span>
+          <span id="term-status" class="text-emerald-400">STATUS: IDLE</span>
+        </div>
+      </div>
+
+      <!-- Incoming Email Threat Radar / Target Intel -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 font-mono-tech text-xs">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-slate-300 font-bold flex items-center gap-1.5">
+            <i data-lucide="radar" class="w-3.5 h-3.5 text-cyan-400"></i>
+            TARGET CLASSIFIER
+          </span>
+          <span class="text-[10px] text-slate-400">Auto-Tagged by Gemini</span>
+        </div>
+        
+        <div class="space-y-1.5 text-[11px]">
+          <div class="flex items-center justify-between p-1.5 rounded bg-slate-950 border border-rose-500/20">
+            <span class="flex items-center gap-1.5 text-rose-400">
+              <span class="w-2 h-2 rounded-full bg-rose-500"></span> Spam / Cold Pitch
+            </span>
+            <span class="text-slate-400">SPACE: Delete (+100 pts)</span>
+          </div>
+          <div class="flex items-center justify-between p-1.5 rounded bg-slate-950 border border-cyan-500/20">
+            <span class="flex items-center gap-1.5 text-cyan-400">
+              <span class="w-2 h-2 rounded-full bg-cyan-500"></span> Newsletter / Promo
+            </span>
+            <span class="text-slate-400">A: Archive / E: EMP</span>
+          </div>
+          <div class="flex items-center justify-between p-1.5 rounded bg-slate-950 border border-amber-500/20">
+            <span class="flex items-center gap-1.5 text-amber-400">
+              <span class="w-2 h-2 rounded-full bg-amber-400"></span> Boss / VIP Urgent
+            </span>
+            <span class="text-yellow-300 font-bold">S: Star (DON'T ZAP!)</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-slate-800 bg-slate-950/80 px-4 py-2 text-center text-xs text-slate-500 font-mono-tech">
+    <span>PromptWars × OUTLIER 2026 Hackathon Challenge · Transform procrastination chores into addictive gaming loops.</span>
+  </footer>
+
+  <!-- ==================== GAME LOGIC JAVASCRIPT ==================== -->
+  <script>
+    // --- ICON INITIALIZATION ---
+    lucide.createIcons();
+
+    // --- RETRO SOUND SYNTHESIS ENGINE (Web Audio API) ---
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+      }
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioContext();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+      playLaser() {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth'
